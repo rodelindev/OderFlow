@@ -14,10 +14,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Entidad: representa una orden de compra.
- * Tiene un ciclo de vida propio, con su identidad y estado.
- */
 public class Order {
 
     private final OrderId id;
@@ -51,8 +47,6 @@ public class Order {
         this.items = new ArrayList<>(items);
     }
 
-    // ── Factory ──────────────────────────────────────────────────
-
     public static Order create(String customerId) {
         if (customerId == null || customerId.isBlank())
             throw new OrderDomainException("customerId must not be blank");
@@ -70,13 +64,10 @@ public class Order {
         return new Order(id, customerId, status, total, createdAt, items);
     }
 
-    // ── Comportamiento de dominio ─────────────────────────────────
-
     public void addItem(OrderItem item) {
         Objects.requireNonNull(item, "item must not be null");
         if (status != OrderStatus.PENDING)
-            throw new OrderDomainException(
-                    "Cannot add items to an order in status: " + status);
+            throw new OrderDomainException("Cannot add items to an order in status: " + status);
         items.add(item);
     }
 
@@ -96,8 +87,7 @@ public class Order {
         if (status == OrderStatus.PAID)
             throw new OrderAlreadyPaidException(id.toString());
         if (status == OrderStatus.CANCELLED)
-            throw new OrderDomainException(
-                    "Cannot pay a cancelled order: " + id);
+            throw new OrderDomainException("Cannot pay a cancelled order: " + id);
         calculateTotal();
         this.status = OrderStatus.PAID;
     }
@@ -107,8 +97,6 @@ public class Order {
             throw new OrderAlreadyCancelledException(id.toString());
         this.status = OrderStatus.CANCELLED;
     }
-
-    // ── Getters ───────────────────────────────────────────────────
 
     public OrderId getId() {
         return id;

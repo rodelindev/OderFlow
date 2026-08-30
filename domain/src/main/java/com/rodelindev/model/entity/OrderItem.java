@@ -31,9 +31,6 @@ public class OrderItem {
         this.unitPrice = unitPrice;
     }
 
-    /**
-     * Precio unitario multiplicado por cantidad.
-     */
     public Money calculateSubtotal() {
         return unitPrice.multiply(quantity);
     }

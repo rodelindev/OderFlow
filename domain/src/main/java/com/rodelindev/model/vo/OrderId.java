@@ -3,9 +3,6 @@ package com.rodelindev.model.vo;
 import java.util.Objects;
 import java.util.UUID;
 
-/**
- * Identificador tipodo para las ordenes.
- */
 public record OrderId(UUID value) {
 
     public OrderId {
