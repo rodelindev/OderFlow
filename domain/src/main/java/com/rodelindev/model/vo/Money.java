@@ -3,10 +3,6 @@ package com.rodelindev.model.vo;
 import java.math.BigDecimal;
 import java.util.Objects;
 
-/**
- * Value Object: representa un monto con su moneda.
- * Inmutable. Se compara por su valor, nunca por una referencia.
- */
 public record Money(BigDecimal amount, String currency) {
 
     public Money {

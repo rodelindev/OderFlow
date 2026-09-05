@@ -12,7 +12,10 @@ public class CancelOrderService implements CancelOrderUseCase {
     private final FindOrderByIdPort findOrderByIdPort;
     private final SaveOrderPort saveOrderPort;
 
-    public CancelOrderService(FindOrderByIdPort findOrderByIdPort, SaveOrderPort saveOrderPort) {
+    public CancelOrderService(
+            FindOrderByIdPort findOrderByIdPort,
+            SaveOrderPort saveOrderPort
+    ) {
         this.findOrderByIdPort = findOrderByIdPort;
         this.saveOrderPort = saveOrderPort;
     }
