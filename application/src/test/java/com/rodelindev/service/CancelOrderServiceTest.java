@@ -1,0 +1,106 @@
+package com.rodelindev.service;
+
+import com.rodelindev.exception.OrderAlreadyCancelledException;
+import com.rodelindev.exception.OrderNotFoundException;
+import com.rodelindev.model.entity.Order;
+import com.rodelindev.model.entity.OrderItem;
+import com.rodelindev.model.enums.OrderStatus;
+import com.rodelindev.model.vo.Money;
+import com.rodelindev.model.vo.OrderId;
+import com.rodelindev.port.out.FindOrderByIdPort;
+import com.rodelindev.port.out.SaveOrderPort;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.math.BigDecimal;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class CancelOrderServiceTest {
+
+    private static final String CURRENCY = "EUR";
+    private static final String ORDER_ID = "11111111-1111-1111-1111-111111111111";
+
+    @Mock
+    private FindOrderByIdPort findOrderByIdPort;
+
+    @Mock
+    private SaveOrderPort saveOrderPort;
+
+    @InjectMocks
+    private CancelOrderService cancelOrderService;
+
+    @Test
+    void should_cancel_and_save_when_order_is_pending() {
+        // Arrange
+        Order order = Order.create("customer-1");
+        OrderId orderId = OrderId.of(ORDER_ID);
+        when(findOrderByIdPort.findById(orderId)).thenReturn(Optional.of(order));
+
+        // Act
+        cancelOrderService.cancelOrder(ORDER_ID);
+
+        // Assert
+        assertEquals(OrderStatus.CANCELLED, order.getStatus());
+        verify(findOrderByIdPort).findById(orderId);
+        verify(saveOrderPort).save(argThat(saved ->
+                saved.getStatus() == OrderStatus.CANCELLED));
+    }
+
+    @Test
+    void should_throw_not_found_when_order_does_not_exist() {
+        // Arrange
+        OrderId orderId = OrderId.of(ORDER_ID);
+        when(findOrderByIdPort.findById(orderId)).thenReturn(Optional.empty());
+
+        // Act
+        // Assert
+        assertThrows(OrderNotFoundException.class,
+                () -> cancelOrderService.cancelOrder(ORDER_ID));
+        verify(findOrderByIdPort).findById(orderId);
+        verify(saveOrderPort, never()).save(any(Order.class));
+    }
+
+    @Test
+    void should_propagate_already_cancelled_when_order_is_already_cancelled() {
+        // Arrange
+        Order order = Order.create("customer-1");
+        order.cancel();
+        OrderId orderId = OrderId.of(ORDER_ID);
+        when(findOrderByIdPort.findById(orderId)).thenReturn(Optional.of(order));
+
+        // Act
+        // Assert
+        assertThrows(OrderAlreadyCancelledException.class,
+                () -> cancelOrderService.cancelOrder(ORDER_ID));
+        verify(findOrderByIdPort).findById(orderId);
+        verify(saveOrderPort, never()).save(any(Order.class));
+    }
+
+    @Test
+    void should_propagate_already_cancelled_when_order_is_paid() {
+        // Arrange
+        Order order = Order.create("customer-1");
+        order.addItem(new OrderItem("P-1", "Producto 1", 1,
+                Money.of(new BigDecimal("10.00"), CURRENCY)));
+        order.pay();
+        OrderId orderId = OrderId.of(ORDER_ID);
+        when(findOrderByIdPort.findById(orderId)).thenReturn(Optional.of(order));
+
+        // Act
+        // Assert
+        assertThrows(OrderAlreadyCancelledException.class,
+                () -> cancelOrderService.cancelOrder(ORDER_ID));
+        verify(findOrderByIdPort).findById(orderId);
+        verify(saveOrderPort, never()).save(any(Order.class));
+    }
+}

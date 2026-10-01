@@ -33,6 +33,13 @@ public class UseCaseConfig {
     }
 
     @Bean
+    public GetOrderByIdUseCase GetOrderByIdUseCase(
+            FindOrderByIdPort findOrderByIdPort
+    ) {
+        return new GetOrderByIdService(findOrderByIdPort);
+    }
+
+    @Bean
     public PayOrderUseCase payOrderUseCase(
             FindOrderByIdPort findOrderByIdPort,
             PaymentGateway paymentGateway,
