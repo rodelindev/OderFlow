@@ -3,8 +3,8 @@ spring:
     name: OrderFlow
 
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/orderflowdb}
-    username: ${DB_USERNAME:root}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/OrderFlowDB}
+    username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:123456}
 
   jpa:
@@ -42,4 +42,4 @@ management:
 logging:
   level:
     root: INFO
-    com.mfpe: DEBUG
+    com.rodelindev: DEBUG
