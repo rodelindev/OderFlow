@@ -3,12 +3,10 @@ package com.rodelindev.adapter.in.rest;
 import com.rodelindev.adapter.in.rest.dto.*;
 import com.rodelindev.command.AddItemToOrderCommand;
 import com.rodelindev.command.CreateOrderCommand;
+import com.rodelindev.exception.OrderNotFoundException;
 import com.rodelindev.model.entity.Order;
 import com.rodelindev.model.enums.OrderStatus;
-import com.rodelindev.port.in.AddItemToOrderUseCase;
-import com.rodelindev.port.in.CancelOrderUseCase;
-import com.rodelindev.port.in.CreateOrderUseCase;
-import com.rodelindev.port.in.PayOrderUseCase;
+import com.rodelindev.port.in.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -24,8 +22,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.verify;
@@ -47,6 +44,9 @@ class OrderControllerTest {
 
     @Mock
     private CancelOrderUseCase cancelOrderUseCase;
+
+    @Mock
+    private GetOrderByIdUseCase getOrderByIdUseCase;
 
     @Mock
     private OrderResponseMapper responseMapper;
@@ -184,5 +184,33 @@ class OrderControllerTest {
         // Assert
         assertEquals(HttpStatus.NO_CONTENT, result.getStatusCode());
         verify(cancelOrderUseCase).cancelOrder(ORDER_ID);
+    }
+
+    @Test
+    void getOrderById_shouldReturn200WithBody_whenOrderExists() {
+        // Arrange
+        Order order = Order.create("customer-1");
+        OrderResponse response = createOrderResponse();
+        when(getOrderByIdUseCase.findById(ORDER_ID)).thenReturn(order);
+        when(responseMapper.toResponse(order)).thenReturn(response);
+
+        // Act
+        ResponseEntity<OrderResponse> result = controller.getOrderById(ORDER_ID);
+
+        // Assert
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertSame(response, result.getBody());
+        verify(getOrderByIdUseCase).findById(ORDER_ID);
+    }
+
+    @Test
+    void getOrderById_shouldThrowOrderNotFoundException_whenOrderDoesNotExist() {
+        // Arrange
+        when(getOrderByIdUseCase.findById(ORDER_ID))
+                .thenThrow(new OrderNotFoundException("Orden no encontrada con ID: " + ORDER_ID));
+
+        // Act & Assert
+        assertThrows(OrderNotFoundException.class, () -> controller.getOrderById(ORDER_ID));
+        verify(getOrderByIdUseCase).findById(ORDER_ID);
     }
 }

@@ -3,12 +3,14 @@ package com.rodelindev.e2e;
 import com.rodelindev.adapter.in.rest.dto.AddItemRequest;
 import com.rodelindev.adapter.in.rest.dto.CreateOrderRequest;
 import com.rodelindev.adapter.in.rest.dto.OrderResponse;
+import com.rodelindev.config.TestSecurityConfig;
 import com.rodelindev.model.enums.OrderStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -18,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureTestRestTemplate
+@Import(TestSecurityConfig.class)
 public class OrderFlowE2ETest {
 
     @Autowired
@@ -28,8 +31,7 @@ public class OrderFlowE2ETest {
         // 1. Crear la orden
         ResponseEntity<OrderResponse> createResponse = testRestTemplate.postForEntity("/api/orders",
                 new CreateOrderRequest("customer-e2e"),
-                OrderResponse.class
-        );
+                OrderResponse.class);
 
         assertEquals(HttpStatus.CREATED, createResponse.getStatusCode());
         OrderResponse created = createResponse.getBody();
@@ -44,15 +46,9 @@ public class OrderFlowE2ETest {
         // 2. Añadir un item
         ResponseEntity<OrderResponse> addItemResponse = testRestTemplate.postForEntity(
                 "/api/orders/" + orderId + "/items",
-                new AddItemRequest(
-                        "PROD-1",
-                        "Laptop",
-                        2,
-                        new BigDecimal("100.00"),
-                        "EUR"
-                ),
-                OrderResponse.class
-        );
+                new AddItemRequest("PROD-1", "Laptop", 2,
+                        new BigDecimal("100.00"), "EUR"),
+                OrderResponse.class);
 
         assertEquals(HttpStatus.OK, addItemResponse.getStatusCode());
         OrderResponse withItem = addItemResponse.getBody();
@@ -70,10 +66,10 @@ public class OrderFlowE2ETest {
         ResponseEntity<Void> payResponse = testRestTemplate.postForEntity(
                 "/api/orders/" + orderId + "/pay",
                 null,
-                Void.class
-        );
+                Void.class);
 
         paid = payResponse.getStatusCode() == HttpStatus.NO_CONTENT;
         assertTrue(paid, "El pago debería haber tenido éxito.");
     }
+
 }

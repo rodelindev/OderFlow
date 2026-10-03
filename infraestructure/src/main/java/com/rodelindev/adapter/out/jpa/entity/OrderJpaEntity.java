@@ -26,10 +26,10 @@ public class OrderJpaEntity {
     @Column(name = "status", nullable = false)
     private OrderStatus status;
 
-    @Column(name = "total_amount", precision = 19, scale = 4, nullable = false)
+    @Column(name = "total_amount", precision = 19, scale = 4)
     private BigDecimal totalAmount;
 
-    @Column(name = "total_currency", length = 3, nullable = false)
+    @Column(name = "total_currency", length = 3)
     private String totalCurrency;
 
     @Column(name = "created_at", nullable = false, updatable = false)

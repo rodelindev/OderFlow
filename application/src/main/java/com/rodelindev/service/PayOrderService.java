@@ -6,6 +6,7 @@ import com.rodelindev.model.entity.Order;
 import com.rodelindev.model.vo.OrderId;
 import com.rodelindev.port.in.PayOrderUseCase;
 import com.rodelindev.port.out.FindOrderByIdPort;
+import com.rodelindev.port.out.NotificationService;
 import com.rodelindev.port.out.PaymentGateway;
 import com.rodelindev.port.out.SaveOrderPort;
 
@@ -14,15 +15,18 @@ public class PayOrderService implements PayOrderUseCase {
     private final FindOrderByIdPort findOrderByIdPort;
     private final PaymentGateway paymentGateway;
     private final SaveOrderPort saveOrderPort;
+    private final NotificationService notificationService;
 
     public PayOrderService(
             FindOrderByIdPort findOrderByIdPort,
             PaymentGateway paymentGateway,
-            SaveOrderPort saveOrderPort
+            SaveOrderPort saveOrderPort,
+            NotificationService notificationService
     ) {
         this.findOrderByIdPort = findOrderByIdPort;
         this.paymentGateway = paymentGateway;
         this.saveOrderPort = saveOrderPort;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -36,6 +40,7 @@ public class PayOrderService implements PayOrderUseCase {
             throw new OrderDomainException("Payment failed for order: " + orderId);
         }
         order.pay();
+        notificationService.notifyOrderStatusChange(orderId, order.getStatus());
         saveOrderPort.save(order);
     }
 }

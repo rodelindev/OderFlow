@@ -10,6 +10,7 @@ import com.rodelindev.model.enums.OrderStatus;
 import com.rodelindev.model.vo.Money;
 import com.rodelindev.model.vo.OrderId;
 import com.rodelindev.port.out.FindOrderByIdPort;
+import com.rodelindev.port.out.NotificationService;
 import com.rodelindev.port.out.PaymentGateway;
 import com.rodelindev.port.out.SaveOrderPort;
 import org.junit.jupiter.api.Test;
@@ -40,6 +41,9 @@ class PayOrderServiceTest {
 
     @Mock
     private SaveOrderPort saveOrderPort;
+
+    @Mock
+    private NotificationService notificationService;
 
     @InjectMocks
     private PayOrderService payOrderService;
@@ -72,6 +76,7 @@ class PayOrderServiceTest {
                 saved.getStatus() == OrderStatus.PAID
                         && saved.getTotal() != null
                         && saved.getTotal().amount().compareTo(new BigDecimal("10.00")) == 0));
+        verify(notificationService).notifyOrderStatusChange(ORDER_ID, OrderStatus.PAID);
     }
 
     @Test
@@ -87,6 +92,8 @@ class PayOrderServiceTest {
         verify(findOrderByIdPort).findById(orderId);
         verify(paymentGateway, never()).processPayment(any(), any());
         verify(saveOrderPort, never()).save(any(Order.class));
+        verify(notificationService, never())
+                .notifyOrderStatusChange(any(), any());
     }
 
     @Test
@@ -121,6 +128,8 @@ class PayOrderServiceTest {
         verify(findOrderByIdPort).findById(orderId);
         verify(paymentGateway, never()).processPayment(any(), any());
         verify(saveOrderPort, never()).save(any(Order.class));
+        verify(notificationService, never())
+                .notifyOrderStatusChange(any(), any());
     }
 
     @Test
@@ -140,5 +149,59 @@ class PayOrderServiceTest {
         verify(findOrderByIdPort).findById(orderId);
         verify(paymentGateway).processPayment(eq(ORDER_ID), any(Money.class));
         verify(saveOrderPort, never()).save(any(Order.class));
+        verify(notificationService, never())
+                .notifyOrderStatusChange(any(), any());
+    }
+
+    @Test
+    void should_notify_with_correct_order_id_and_status_when_payment_succeeds() {
+        // Arrange
+        Order order = aPendingOrderWithOneItem();
+        OrderId orderId = OrderId.of(ORDER_ID);
+        when(findOrderByIdPort.findById(orderId)).thenReturn(Optional.of(order));
+        when(paymentGateway.processPayment(eq(ORDER_ID), any(Money.class))).thenReturn(true);
+
+        // Act
+        payOrderService.payOrder(ORDER_ID);
+
+        // Assert — verifica parámetros exactos de la notificación
+        verify(notificationService).notifyOrderStatusChange(
+                argThat(id -> id.equals(ORDER_ID)),
+                argThat(status -> status == OrderStatus.PAID)
+        );
+    }
+
+    @Test
+    void should_notify_before_save_when_payment_succeeds() {
+        // Arrange
+        Order order = aPendingOrderWithOneItem();
+        OrderId orderId = OrderId.of(ORDER_ID);
+        when(findOrderByIdPort.findById(orderId)).thenReturn(Optional.of(order));
+        when(paymentGateway.processPayment(eq(ORDER_ID), any(Money.class))).thenReturn(true);
+
+        // Act
+        payOrderService.payOrder(ORDER_ID);
+
+        // Assert — verifica que ambos se llaman exactamente una vez
+        verify(notificationService, times(1))
+                .notifyOrderStatusChange(ORDER_ID, OrderStatus.PAID);
+        verify(saveOrderPort, times(1)).save(any(Order.class));
+    }
+
+    @Test
+    void should_notify_only_once_when_payment_succeeds() {
+        // Arrange
+        Order order = aPendingOrderWithOneItem();
+        OrderId orderId = OrderId.of(ORDER_ID);
+        when(findOrderByIdPort.findById(orderId)).thenReturn(Optional.of(order));
+        when(paymentGateway.processPayment(eq(ORDER_ID), any(Money.class))).thenReturn(true);
+
+        // Act
+        payOrderService.payOrder(ORDER_ID);
+
+        // Assert
+        verify(notificationService, times(1))
+                .notifyOrderStatusChange(any(), any());
+        verifyNoMoreInteractions(notificationService);
     }
 }

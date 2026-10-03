@@ -1,0 +1,24 @@
+¿Por qué SecurityConfig no está en domain o application ?
+
+Porque SecurityConfig es una clase técnica vinculada a Spring Security y a la infraestructura web por lo tanto debe pertenecer a la capara de 
+infraestructura ya que la capa de dominicio debe ser pura y solo debe contener la logica del negocio, application contiene los casos de uso y la orquestación del negocio.
+por lo tanto esta debe estar en infraestructura.
+
+¿Qué pasaría si un usuario envía un JWT válido pero sin ningún rol de Keycloak? ¿Podría acceder
+a GET /api/orders/{id} ? Justifica tu respuesta con la configuración actual.
+
+Aunque el token no contenga roles de Keycloak y el KeycloakRoleConverter genere una lista de autoridades vacía, el usuario está completamente autenticado. 
+Por lo tanto, la petición pasa la verificación de seguridad y responde exitosamente
+
+¿Qué función cumple KeycloakRoleConverter y qué sucedería si no existiera?
+
+Extrae y transforma la estructura de roles específica de Keycloak, que se ubica dentro de las propiedades anidadas del token.
+
+Explica la diferencia entre 401 Unauthorized y 403 Forbidden en el contexto de este
+proyecto. Da un ejemplo concreto de cuándo ocurre cada uno.
+
+401 - Ocurre cuando la API no reconoce la identidad del usuario porque el token JWT falta, es inválido o expiró.
+Ejemplo: Hacer POST /api/orders sin incluir el encabezado Authorization.
+
+404 - Ocurre cuando la ruta HTTP solicitada no existe o la entidad/recurso no fue encontrado en la base de datos.
+Ejemplo: Hacer GET /api/orders/999 para una orden con un ID inexistente.

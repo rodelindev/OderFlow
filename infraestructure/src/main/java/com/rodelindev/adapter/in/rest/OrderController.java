@@ -7,10 +7,7 @@ import com.rodelindev.adapter.in.rest.dto.OrderResponseMapper;
 import com.rodelindev.command.AddItemToOrderCommand;
 import com.rodelindev.command.CreateOrderCommand;
 import com.rodelindev.model.entity.Order;
-import com.rodelindev.port.in.AddItemToOrderUseCase;
-import com.rodelindev.port.in.CancelOrderUseCase;
-import com.rodelindev.port.in.CreateOrderUseCase;
-import com.rodelindev.port.in.PayOrderUseCase;
+import com.rodelindev.port.in.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -25,6 +22,7 @@ public class OrderController {
     private final AddItemToOrderUseCase addItemToOrderUseCase;
     private final PayOrderUseCase payOrderUseCase;
     private final CancelOrderUseCase cancelOrderUseCase;
+    private final GetOrderByIdUseCase getOrderByIdUseCase;
     private final OrderResponseMapper responseMapper;
 
     public OrderController(
@@ -32,12 +30,14 @@ public class OrderController {
             AddItemToOrderUseCase addItemToOrderUseCase,
             PayOrderUseCase payOrderUseCase,
             CancelOrderUseCase cancelOrderUseCase,
+            GetOrderByIdUseCase getOrderByIdUseCase,
             OrderResponseMapper responseMapper
     ) {
         this.createOrderUseCase = createOrderUseCase;
         this.addItemToOrderUseCase = addItemToOrderUseCase;
         this.payOrderUseCase = payOrderUseCase;
         this.cancelOrderUseCase = cancelOrderUseCase;
+        this.getOrderByIdUseCase = getOrderByIdUseCase;
         this.responseMapper = responseMapper;
     }
 
@@ -83,5 +83,11 @@ public class OrderController {
     public ResponseEntity<Void> cancelOrder(@PathVariable String id) {
         cancelOrderUseCase.cancelOrder(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<OrderResponse> getOrderById(@PathVariable String id) {
+        Order order = getOrderByIdUseCase.findById(id);
+        return ResponseEntity.ok(responseMapper.toResponse(order));
     }
 }
