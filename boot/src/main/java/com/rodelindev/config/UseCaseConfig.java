@@ -4,14 +4,8 @@ import com.rodelindev.port.in.AddItemToOrderUseCase;
 import com.rodelindev.port.in.CancelOrderUseCase;
 import com.rodelindev.port.in.CreateOrderUseCase;
 import com.rodelindev.port.in.PayOrderUseCase;
-import com.rodelindev.port.out.FindOrderByIdPort;
-import com.rodelindev.port.out.InventoryService;
-import com.rodelindev.port.out.PaymentGateway;
-import com.rodelindev.port.out.SaveOrderPort;
-import com.rodelindev.service.AddItemToOrderService;
-import com.rodelindev.service.CancelOrderService;
-import com.rodelindev.service.CreateOrderService;
-import com.rodelindev.service.PayOrderService;
+import com.rodelindev.port.out.*;
+import com.rodelindev.service.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -36,9 +30,10 @@ public class UseCaseConfig {
     public PayOrderUseCase payOrderUseCase(
             FindOrderByIdPort findOrderByIdPort,
             PaymentGateway paymentGateway,
-            SaveOrderPort saveOrderPort
+            SaveOrderPort saveOrderPort,
+            NotificationService notificationService
     ) {
-        return new PayOrderService(findOrderByIdPort, paymentGateway, saveOrderPort);
+        return new PayOrderService(findOrderByIdPort, paymentGateway, saveOrderPort, notificationService);
     }
 
     @Bean
@@ -47,5 +42,10 @@ public class UseCaseConfig {
             SaveOrderPort saveOrderPort
     ) {
         return new CancelOrderService(findOrderByIdPort, saveOrderPort);
+    }
+
+    @Bean
+    public GetOrderByIdService getOrderByIdService(FindOrderByIdPort findOrderByIdPort) {
+        return new GetOrderByIdService(findOrderByIdPort);
     }
 }
